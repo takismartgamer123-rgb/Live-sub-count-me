@@ -2,13 +2,12 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>LIVE STATS PRO</title>
+<title>Live Stats Real-Time</title>
 
 <style>
 html, body {
   margin: 0;
   padding: 0;
-  width: 100%;
   height: 100%;
   overflow: hidden;
   background: radial-gradient(circle at center, #0a0a0a, #000);
@@ -16,7 +15,7 @@ html, body {
   color: white;
 }
 
-/* 🌌 particles */
+/* 🌌 background */
 canvas {
   position: absolute;
   top: 0;
@@ -37,7 +36,7 @@ canvas {
   z-index: 10;
 }
 
-/* 🔥 center */
+/* center */
 .container {
   position: absolute;
   top: 50%;
@@ -47,14 +46,14 @@ canvas {
   z-index: 2;
 }
 
-/* LIVE title */
+/* title */
 h1 {
   font-size: 18px;
   color: #aaa;
   letter-spacing: 3px;
 }
 
-/* BIG SUBS */
+/* big number */
 #subs {
   font-size: 140px;
   color: #00fff0;
@@ -62,12 +61,11 @@ h1 {
   margin: 10px 0;
 }
 
-/* 📊 panel */
+/* panel */
 .panel {
   display: flex;
   gap: 15px;
   justify-content: center;
-  margin-top: 10px;
 }
 
 .box {
@@ -91,7 +89,7 @@ h1 {
   color: #00fff0;
 }
 
-/* 📈 goal bar */
+/* goal bar */
 .bar {
   width: 420px;
   height: 8px;
@@ -106,10 +104,10 @@ h1 {
   height: 100%;
   width: 0%;
   background: linear-gradient(90deg,#00fff0,#0088ff);
-  transition: width 1s ease;
+  transition: width 0.8s ease;
 }
 
-/* 🔔 ALERT */
+/* alert */
 #alert {
   position: absolute;
   top: 80px;
@@ -122,31 +120,21 @@ h1 {
   border-radius: 10px;
   display: none;
   z-index: 20;
-  animation: pop 0.4s ease;
-}
-
-@keyframes pop {
-  0% { transform: translateX(-50%) scale(0.5); opacity: 0; }
-  100% { transform: translateX(-50%) scale(1); opacity: 1; }
 }
 </style>
 </head>
 
 <body>
 
-<!-- LOGO -->
 <img id="logo" src="logo.png">
 
-<!-- ALERT -->
 <div id="alert">+1 Subscriber 🎉</div>
 
-<!-- PARTICLES -->
 <canvas id="particles"></canvas>
 
-<!-- MAIN -->
 <div class="container">
 
-  <h1>LIVE STATS</h1>
+  <h1>LIVE REAL-TIME STATS</h1>
 
   <div id="subs">0</div>
 
@@ -180,15 +168,16 @@ const CHANNEL_ID = "UCCji3rVchUafZT6qxETGIxQ";
 
 let goal = 10000;
 let lastSubs = 0;
+let loading = false;
 
-/* 🔔 ALERT */
+/* alert */
 function showAlert(){
   const a = document.getElementById("alert");
   a.style.display = "block";
-  setTimeout(()=> a.style.display = "none", 2000);
+  setTimeout(()=> a.style.display = "none", 1500);
 }
 
-/* 📈 goal */
+/* goal */
 function updateGoal(subs){
   if(subs >= goal) goal *= 2;
 
@@ -200,7 +189,7 @@ function updateGoal(subs){
   document.getElementById("fill").style.width = percent + "%";
 }
 
-/* 🔢 animation */
+/* animate */
 function animate(el, start, end, duration){
   let t = null;
 
@@ -218,48 +207,12 @@ function animate(el, start, end, duration){
   requestAnimationFrame(step);
 }
 
-/* 🌌 particles */
-const canvas = document.getElementById("particles");
-const ctx = canvas.getContext("2d");
-
-canvas.width = window.innerWidth;
-canvas.height = window.innerHeight;
-
-let dots = [];
-
-for(let i=0;i<70;i++){
-  dots.push({
-    x: Math.random()*canvas.width,
-    y: Math.random()*canvas.height,
-    r: Math.random()*2,
-    dx: (Math.random()-0.5)*0.5,
-    dy: (Math.random()-0.5)*0.5
-  });
-}
-
-function draw(){
-  ctx.clearRect(0,0,canvas.width,canvas.height);
-
-  dots.forEach(p=>{
-    p.x += p.dx;
-    p.y += p.dy;
-
-    if(p.x<0||p.x>canvas.width) p.dx*=-1;
-    if(p.y<0||p.y>canvas.height) p.dy*=-1;
-
-    ctx.beginPath();
-    ctx.arc(p.x,p.y,p.r,0,Math.PI*2);
-    ctx.fillStyle="#00fff0";
-    ctx.fill();
-  });
-
-  requestAnimationFrame(draw);
-}
-
-draw();
-
-/* 🔥 fetch YouTube */
+/* fetch */
 async function load(){
+
+  if(loading) return;
+  loading = true;
+
   try {
     const url = `https://www.googleapis.com/youtube/v3/channels?part=statistics&id=${CHANNEL_ID}&key=${API_KEY}`;
     const res = await fetch(url);
@@ -268,26 +221,27 @@ async function load(){
     let subs = parseInt(data.items[0].statistics.subscriberCount);
     let views = parseInt(data.items[0].statistics.viewCount);
 
-    animate(document.getElementById("subs"), lastSubs, subs, 1200);
+    if(subs !== lastSubs){
+      animate(document.getElementById("subs"), lastSubs, subs, 600);
+      showAlert();
+    }
 
     document.getElementById("subsBox").innerText = subs.toLocaleString();
     document.getElementById("viewsBox").innerText = views.toLocaleString();
 
     updateGoal(subs);
 
-    if(subs > lastSubs){
-      showAlert();
-    }
-
     lastSubs = subs;
 
   } catch(e){
-    document.getElementById("subs").innerText = "Error";
+    console.log("error");
   }
+
+  loading = false;
 }
 
 load();
-setInterval(load, 15000);
+setInterval(load, 3000); // 🔥 real-time feel
 
 </script>
 
