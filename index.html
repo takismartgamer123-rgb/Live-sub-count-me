@@ -1,249 +1,389 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ar" dir="rtl">
 <head>
 <meta charset="UTF-8">
-<title>Live Stats Real-Time</title>
-
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GOD STREAM - ɪʈʂ ʈɑkɪ!! 🇩🇿²⁴</title>
 <style>
-html, body {
-  margin: 0;
-  padding: 0;
-  height: 100%;
-  overflow: hidden;
-  background: radial-gradient(circle at center, #0a0a0a, #000);
-  font-family: Arial;
-  color: white;
-}
+  @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=Cairo:wght@400;700;900&family=Noto+Sans+Arabic:wght@700;900&display=swap');
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body {
+    width: 100%; height: 100%; overflow: hidden;
+    font-family: 'Noto Sans Arabic', 'Cairo', Arial;
+    background: #000; color: #fff; cursor: pointer;
+  }
+  body.obs { background: transparent!important; cursor: default; }
+  body.obs::before { display: none; }
+  body::before {
+    content: "";
+    position: fixed; width: 100%; height: 100%;
+    background: radial-gradient(circle at 30% 30%, rgba(0,255,240,0.08), transparent 60%),
+                radial-gradient(circle at 70% 70%, rgba(255,0,255,0.06), transparent 60%);
+    animation: bg 10s infinite alternate; z-index: -1;
+  }
+  @keyframes bg { from {transform:scale(1);} to {transform:scale(1.1);} }
+  #topBar {
+    position: fixed; top: 0; left: 0; right: 0;
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 10px 20px;
+    background: linear-gradient(180deg, rgba(0,0,0,0.7) 0%, transparent 100%);
+    z-index: 100;
+  }
+  #channelInfo { display: flex; align-items: center; gap: 12px; }
+  #channelThumb {
+    width: 40px; height: 40px; border-radius: 50%;
+    border: 2px solid #00fff0; box-shadow: 0 0 15px rgba(0,255,240,0.5);
+  }
+  #channelNameTop { font-size: 1.2vw; font-weight: 700; }
+  #liveBox { display: flex; align-items: center; gap: 12px; }
+  #live {
+    background: linear-gradient(45deg, #ff0000, #ff5e00);
+    padding: 6px 16px; border-radius: 20px; font-size: 12px;
+    font-weight: 700; animation: pulse 1s infinite; box-shadow: 0 0 25px rgba(255,0,0,0.6);
+  }
+  @keyframes pulse { 0%{transform:scale(1);} 50%{transform:scale(1.05);} 100%{transform:scale(1);} }
+  #liveViewers {
+    background: rgba(0,0,0,0.5); border: 1px solid #ff0000;
+    padding: 6px 16px; border-radius: 20px; font-size: 12px;
+    font-weight: 700; display: flex; align-items: center; gap: 6px;
+  }
+  #liveViewersCount { font-family: 'Orbitron', monospace; color: #ff5e00; }
 
-/* 🌌 background */
-canvas {
-  position: absolute;
-  top: 0;
-  left: 0;
-  z-index: 0;
-}
+ .center {
+    position: absolute; top: 50%; left: 50%;
+    transform: translate(-50%,-50%); text-align: center; width: 95%;
+    display: flex; flex-direction: column; align-items: center; gap: 1.5vh;
+  }
 
-/* 📌 logo */
-#logo {
-  width: 70px;
-  height: 70px;
-  border-radius: 50%;
-  position: absolute;
-  top: 15px;
-  left: 15px;
-  border: 2px solid #00fff0;
-  box-shadow: 0 0 15px #00fff0;
-  z-index: 10;
-}
+ .channel-display {
+    font-size: 3vw; font-weight: 900;
+    font-family: 'Noto Sans Arabic', 'Cairo', sans-serif;
+    background: linear-gradient(45deg, #bb86fc, #03dac6);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    text-shadow: 0 0 30px rgba(187,134,252,0.5);
+    letter-spacing: 2px;
+  }
 
-/* center */
-.container {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  text-align: center;
-  z-index: 2;
-}
+ .main-stat { margin: 0.5vh 0; }
+  #subs {
+    font-family: 'Orbitron', monospace; font-size: 9vw; color: #00fff0;
+    text-shadow: 0 0 40px #00fff0, 0 0 80px #00fff0; line-height: 1;
+  }
+ .sub-label { font-size: 1.8vw; color: #bb86fc; font-weight: 700; margin-top: 5px; }
 
-/* title */
-h1 {
-  font-size: 18px;
-  color: #aaa;
-  letter-spacing: 3px;
-}
+ .stats-grid {
+    display: grid; grid-template-columns: repeat(3, 1fr);
+    gap: 1vw; width: 70%; max-width: 800px;
+  }
+ .stat-box {
+    background: rgba(0,255,240,0.08);
+    border: 1px solid rgba(0,255,240,0.3);
+    border-radius: 12px; padding: 0.8vw;
+    backdrop-filter: blur(10px);
+  }
+ .stat-value {
+    font-family: 'Orbitron', monospace;
+    font-size: 2vw; font-weight: 700; color: #03dac6;
+  }
+ .stat-label { font-size: 0.9vw; color: #aaa; margin-top: 3px; }
 
-/* big number */
-#subs {
-  font-size: 140px;
-  color: #00fff0;
-  text-shadow: 0 0 25px #00fff0;
-  margin: 10px 0;
-}
+  #alert {
+    position: fixed; top: 80px; left: 50%; transform: translateX(-50%);
+    background: rgba(0,255,240,0.15); border: 2px solid #00fff0;
+    padding: 12px 25px; border-radius: 12px; display: none; z-index: 9999;
+    font-size: 1.8vw; font-weight: 700; box-shadow: 0 0 40px rgba(0,255,240,0.5);
+  }
 
-/* panel */
-.panel {
-  display: flex;
-  gap: 15px;
-  justify-content: center;
-}
+  #chart {
+    position: fixed; bottom: 1.5vw; left: 1.5vw; width: 30vw; height: 8vw;
+    border-radius: 12px; background: rgba(0,0,0,0.3);
+    border: 1px solid rgba(0,255,240,0.3); backdrop-filter: blur(5px);
+  }
 
-.box {
-  background: rgba(0,0,0,0.4);
-  border: 1px solid #00fff0;
-  box-shadow: 0 0 10px #00fff0;
-  padding: 10px 18px;
-  border-radius: 10px;
-  min-width: 110px;
-}
+  #uptime {
+    position: fixed; bottom: 1.5vw; right: 1.5vw; font-family: 'Orbitron', monospace;
+    font-size: 1.2vw; opacity: 0.8; background: rgba(0,0,0,0.3);
+    padding: 8px 16px; border-radius: 8px;
+  }
 
-.box h3 {
-  margin: 0;
-  font-size: 13px;
-  color: #aaa;
-}
+  #musicBtn {
+    position: fixed; top: 70px; right: 20px;
+    background: rgba(0,255,240,0.2); border: 1px solid #00fff0;
+    padding: 8px 12px; border-radius: 8px; cursor: pointer;
+    font-size: 0.9vw; backdrop-filter: blur(5px); z-index: 100;
+  }
+  #nowPlaying {
+    position: fixed; top: 110px; right: 20px;
+    font-size: 0.8vw; opacity: 0.7;
+    max-width: 180px; text-align: right; z-index: 100;
+  }
 
-.box p {
-  margin: 5px 0 0;
-  font-size: 20px;
-  color: #00fff0;
-}
-
-/* goal bar */
-.bar {
-  width: 420px;
-  height: 8px;
-  background: #111;
-  margin: 20px auto;
-  border-radius: 20px;
-  overflow: hidden;
-  box-shadow: 0 0 10px #00fff0;
-}
-
-#fill {
-  height: 100%;
-  width: 0%;
-  background: linear-gradient(90deg,#00fff0,#0088ff);
-  transition: width 0.8s ease;
-}
-
-/* alert */
-#alert {
-  position: absolute;
-  top: 80px;
-  left: 50%;
-  transform: translateX(-50%);
-  background: rgba(0,255,240,0.15);
-  border: 1px solid #00fff0;
-  box-shadow: 0 0 20px #00fff0;
-  padding: 10px 20px;
-  border-radius: 10px;
-  display: none;
-  z-index: 20;
-}
+  #confetti { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 9998; }
 </style>
 </head>
-
 <body>
-
-<img id="logo" src="logo.png">
-
-<div id="alert">+1 Subscriber 🎉</div>
-
-<canvas id="particles"></canvas>
-
-<div class="container">
-
-  <h1>LIVE REAL-TIME STATS</h1>
-
-  <div id="subs">0</div>
-
-  <div class="panel">
-    <div class="box">
-      <h3>SUBS</h3>
-      <p id="subsBox">0</p>
+  <div id="topBar">
+    <div id="channelInfo">
+      <img id="channelThumb" src="" alt="">
+      <div id="channelNameTop">ɪʈʂ ʈɑkɪ!! 🇩🇿²⁴</div>
     </div>
-
-    <div class="box">
-      <h3>VIEWS</h3>
-      <p id="viewsBox">0</p>
-    </div>
-
-    <div class="box">
-      <h3>GOAL</h3>
-      <p id="goalBox">10K</p>
+    <div id="liveBox">
+      <div id="liveViewers">👀 <span id="liveViewersCount">0</span> يشاهد</div>
+      <div id="live">🔴 LIVE 24/7</div>
     </div>
   </div>
 
-  <div class="bar">
-    <div id="fill"></div>
+  <button id="musicBtn">🎵 شغل الموسيقى</button>
+  <div id="nowPlaying"></div>
+  <div id="alert"></div>
+
+  <div class="center">
+    <div class="channel-display">ɪʈʂ ʈɑkɪ!! 🇩🇿²⁴</div>
+    <div class="main-stat">
+      <div id="subs">0</div>
+      <div class="sub-label">مشترك</div>
+    </div>
+    <div class="stats-grid">
+      <div class="stat-box">
+        <div class="stat-value" id="totalViews">0</div>
+        <div class="stat-label">إجمالي المشاهدات</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-value" id="videoCount">0</div>
+        <div class="stat-label">عدد الفيديوهات</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-value" id="createdDate">--</div>
+        <div class="stat-label">تاريخ الإنشاء</div>
+      </div>
+    </div>
   </div>
 
-</div>
+  <canvas id="chart"></canvas>
+  <canvas id="confetti"></canvas>
+  <div id="uptime">UPTIME: 00:00:00</div>
+  <audio id="bgMusic" loop></audio>
 
 <script>
+  const API_KEY = "AIzaSyDV6wsuCP5iGrLUFkTOwCA-veseDC2uhNY";
+  const CHANNEL_ID = "UCCji3rVchUafZT6qxETGIxQ";
+  const HARDCODED_NAME = "ɪʈʂ ʈɑkɪ!! 🇩🇿²⁴";
 
-const API_KEY = "AIzaSyDV6wsuCP5iGrLUFkTOwCA-veseDC2uhNY";
-const CHANNEL_ID = "UCCji3rVchUafZT6qxETGIxQ";
+  const playlist = [
+    "https://cdn.pixabay.com/download/audio/2022/05/27/audio_1808fbf07a.mp3",
+    "https://cdn.pixabay.com/download/audio/2022/03/15/audio_c8c8a73467.mp3"
+  ];
 
-let goal = 10000;
-let lastSubs = 0;
-let loading = false;
+  let history = [];
+  let lastSubs = 0;
+  let particles = [];
+  let lastFetchTime = 0;
+  let streamStartTime = Date.now();
+  let currentSong = 0;
+  let currentLiveVideoId = null;
 
-/* alert */
-function showAlert(){
-  const a = document.getElementById("alert");
-  a.style.display = "block";
-  setTimeout(()=> a.style.display = "none", 1500);
-}
-
-/* goal */
-function updateGoal(subs){
-  if(subs >= goal) goal *= 2;
-
-  document.getElementById("goalBox").innerText = goal.toLocaleString();
-
-  let percent = (subs / goal) * 100;
-  if(percent > 100) percent = 100;
-
-  document.getElementById("fill").style.width = percent + "%";
-}
-
-/* animate */
-function animate(el, start, end, duration){
-  let t = null;
-
-  function step(time){
-    if(!t) t = time;
-    let p = time - t;
-
-    let val = Math.floor(start + (end - start) * (p / duration));
-
-    el.innerText = val;
-
-    if(p < duration) requestAnimationFrame(step);
+  document.getElementById('channelNameTop').innerText = HARDCODED_NAME;
+  if(window.location.search.includes('obs=1')) {
+    document.body.classList.add('obs');
+    document.getElementById('musicBtn').style.display = 'none';
+    document.getElementById('nowPlaying').style.display = 'none';
   }
 
-  requestAnimationFrame(step);
-}
+  const audio = document.getElementById('bgMusic');
+  const musicBtn = document.getElementById('musicBtn');
+  const nowPlaying = document.getElementById('nowPlaying');
 
-/* fetch */
-async function load(){
+  function playNext() {
+    audio.src = playlist[currentSong];
+    audio.volume = 0.3;
+    audio.play().catch(e => console.log('Audio autoplay blocked'));
+    nowPlaying.innerText = `🎵 Track ${currentSong + 1}`;
+    currentSong = (currentSong + 1) % playlist.length;
+  }
 
-  if(loading) return;
-  loading = true;
-
-  try {
-    const url = `https://www.googleapis.com/youtube/v3/channels?part=statistics&id=${CHANNEL_ID}&key=${API_KEY}`;
-    const res = await fetch(url);
-    const data = await res.json();
-
-    let subs = parseInt(data.items[0].statistics.subscriberCount);
-    let views = parseInt(data.items[0].statistics.viewCount);
-
-    if(subs !== lastSubs){
-      animate(document.getElementById("subs"), lastSubs, subs, 600);
-      showAlert();
+  audio.addEventListener('ended', playNext);
+  musicBtn.addEventListener('click', () => {
+    if(audio.paused) {
+      playNext();
+      musicBtn.innerText = '⏸️ وقف الموسيقى';
+    } else {
+      audio.pause();
+      musicBtn.innerText = '🎵 شغل الموسيقى';
+      nowPlaying.innerText = '';
     }
+  });
 
-    document.getElementById("subsBox").innerText = subs.toLocaleString();
-    document.getElementById("viewsBox").innerText = views.toLocaleString();
+  function toggleFullScreen() {
+    if (!document.fullscreenElement) {
+      document.documentElement.requestFullscreen().catch(err => console.log(err));
+    }
+  }
+  document.body.addEventListener('click', (e) => {
+    if(e.target.id!== 'musicBtn') toggleFullScreen();
+  });
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'f' || e.key === 'F') toggleFullScreen();
+  });
 
-    updateGoal(subs);
+  function resizeCanvas() {
+    const chart = document.getElementById('chart');
+    chart.width = chart.offsetWidth; chart.height = chart.offsetHeight;
+    const confetti = document.getElementById('confetti');
+    confetti.width = window.innerWidth; confetti.height = window.innerHeight;
+  }
+  window.addEventListener('resize', resizeCanvas);
+  resizeCanvas();
 
-    lastSubs = subs;
+  function updateUptime() {
+    const seconds = Math.floor((Date.now() - streamStartTime) / 1000);
+    const h = Math.floor(seconds / 3600).toString().padStart(2, '0');
+    const m = Math.floor((seconds % 3600) / 60).toString().padStart(2, '0');
+    const s = (seconds % 60).toString().padStart(2, '0');
+    document.getElementById('uptime').innerText = `UPTIME: ${h}:${m}:${s}`;
+  }
+  setInterval(updateUptime, 1000);
 
-  } catch(e){
-    console.log("error");
+  function showAlert(text){
+    const a = document.getElementById("alert");
+    a.innerText = text; a.style.display = "block";
+    setTimeout(()=>a.style.display="none",1500);
   }
 
-  loading = false;
-}
+  function shake(){
+    document.body.style.transform = `translate(${Math.random()*8-4}px,${Math.random()*8-4}px)`;
+    setTimeout(()=>document.body.style.transform="translate(0,0)",100);
+  }
 
-load();
-setInterval(load, 3000); // 🔥 real-time feel
+  function flash(){
+    const f = document.createElement("div");
+    f.style = "position:fixed;top:0;left:0;width:100%;height:100%;background:white;opacity:0.3;z-index:9999";
+    document.body.appendChild(f); setTimeout(()=>f.remove(),120);
+  }
 
+  const c = document.getElementById("confetti");
+  const ctx = c.getContext("2d");
+
+  function burst(){
+    for(let i=0; i<250; i++){
+      particles.push({
+        x: c.width/2, y: c.height/2,
+        vx: (Math.random()-0.5)*18, vy: (Math.random()-2)*18,
+        size: Math.random()*12+3, color: `hsl(${Math.random()*60+160},100%,50%)`
+      });
+    }
+  }
+
+  function drawConfetti(){
+    ctx.clearRect(0,0,c.width,c.height);
+    particles.forEach((p,i)=>{
+      p.x+=p.vx; p.y+=p.vy; p.vy+=0.35;
+      ctx.fillStyle = p.color;
+      ctx.fillRect(p.x,p.y,p.size,p.size);
+      if(p.y>c.height) particles.splice(i,1);
+    });
+    requestAnimationFrame(drawConfetti);
+  }
+  drawConfetti();
+
+  function smooth(el,val){
+    let start = parseInt(el.innerText.replace(/,/g,''))||0;
+    let diff = val-start; let i=0; let step = diff/30;
+    let int = setInterval(()=>{
+      start += step;
+      el.innerText = Math.floor(start).toLocaleString();
+      i++; if(i>30) clearInterval(int);
+    },16);
+  }
+
+  function events(subs){
+    if(subs > lastSubs){ showAlert("🔥 +1 SUB"); shake(); }
+    if(subs - lastSubs >= 10){ showAlert("🚀 VIRAL BOOST +10"); burst(); flash(); shake(); }
+    if([100,500,1000,5000,10000,50000,100000,500000,1000000].includes(subs)){
+      showAlert("🏆 MILESTONE " + subs.toLocaleString()); burst(); flash(); shake();
+    }
+    lastSubs = subs;
+  }
+
+  function draw(){
+    const c2 = document.getElementById("chart");
+    const cctx = c2.getContext("2d");
+    cctx.clearRect(0,0,c2.width,c2.height);
+    if(history.length<2) return;
+    let step = c2.width/(history.length-1);
+    let maxS = Math.max(...history.map(h=>h.subs));
+    cctx.beginPath(); cctx.lineWidth=3; cctx.strokeStyle="#00fff0";
+    cctx.shadowBlur = 10; cctx.shadowColor = "#00fff0";
+    history.forEach((h,i)=>{
+      let x = i*step;
+      let y = c2.height-(h.subs/maxS)*(c2.height-10)-5;
+      i===0? cctx.moveTo(x,y) : cctx.lineTo(x,y);
+    });
+    cctx.stroke(); cctx.shadowBlur = 0;
+  }
+
+  async function getLiveViewers() {
+    if(!currentLiveVideoId) return 0;
+    try {
+      const url = `https://www.googleapis.com/youtube/v3/videos?part=liveStreamingDetails&id=${currentLiveVideoId}&key=${API_KEY}`;
+      const res = await fetch(url);
+      const data = await res.json();
+      if(data.items && data.items[0]?.liveStreamingDetails?.concurrentViewers) {
+        return parseInt(data.items[0].liveStreamingDetails.concurrentViewers);
+      }
+    } catch(e) { console.log('Live viewers error:', e); }
+    return 0;
+  }
+
+  async function findLiveVideo() {
+    try {
+      const url = `https://www.googleapis.com/youtube/v3/search?part=id&channelId=${CHANNEL_ID}&eventType=live&type=video&key=${API_KEY}`;
+      const res = await fetch(url);
+      const data = await res.json();
+      if(data.items && data.items[0]) {
+        currentLiveVideoId = data.items[0].id.videoId;
+      }
+    } catch(e) { console.log('Find live error:', e); }
+  }
+
+  async function load(){
+    if(Date.now() - lastFetchTime < 10000) return;
+    lastFetchTime = Date.now();
+
+    try {
+      const channelUrl = `https://www.googleapis.com/youtube/v3/channels?part=snippet,statistics&id=${CHANNEL_ID}&key=${API_KEY}`;
+      const channelRes = await fetch(channelUrl);
+      const channelData = await channelRes.json();
+      if(!channelData.items) return;
+
+      const channel = channelData.items[0];
+      const stats = channel.statistics;
+      const snippet = channel.snippet;
+
+      document.getElementById('channelThumb').src = snippet.thumbnails.default.url;
+
+      const subs = parseInt(stats.subscriberCount);
+      const views = parseInt(stats.viewCount);
+      const videos = parseInt(stats.videoCount);
+      const created = new Date(snippet.publishedAt).getFullYear();
+
+      smooth(document.getElementById("subs"), subs);
+      document.getElementById("totalViews").innerText = views.toLocaleString();
+      document.getElementById("videoCount").innerText = videos.toLocaleString();
+      document.getElementById("createdDate").innerText = created;
+
+      await findLiveVideo();
+      const liveCount = await getLiveViewers();
+      document.getElementById("liveViewersCount").innerText = liveCount.toLocaleString();
+
+      events(subs);
+      history.push({subs, views});
+      if(history.length > 60) history.shift();
+      draw();
+    } catch(e) { console.log('YT Error:', e); }
+  }
+
+  load();
+  setInterval(load, 10000);
 </script>
-
 </body>
 </html>
