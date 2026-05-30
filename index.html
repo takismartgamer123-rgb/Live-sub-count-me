@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Live Subs Counter</title>
+<title>Live Channel PRO</title>
 
 <style>
 body {
@@ -17,37 +17,71 @@ body {
   overflow: hidden;
 }
 
+/* 🌌 particles */
+canvas {
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 0;
+}
+
+/* 📌 logo */
+#logo {
+  width: 70px;
+  height: 70px;
+  border-radius: 50%;
+  position: absolute;
+  top: 15px;
+  left: 15px;
+  border: 2px solid #00fff0;
+  box-shadow: 0 0 15px #00fff0;
+}
+
+/* container */
 .container {
   text-align: center;
+  position: relative;
+  z-index: 2;
 }
 
-h1 {
-  font-size: 26px;
-  color: #aaa;
-  letter-spacing: 3px;
-  font-weight: 300;
-}
-
+/* big subs */
 #subs {
-  font-size: 120px;
+  font-size: 130px;
   color: #00fff0;
-  text-shadow: 0 0 20px #00fff0, 0 0 40px #00fff0;
-  margin: 20px 0;
-  animation: glow 2s infinite;
+  text-shadow: 0 0 20px #00fff0;
+  margin: 10px 0;
 }
 
-@keyframes glow {
-  0% { text-shadow: 0 0 10px #00fff0; }
-  50% { text-shadow: 0 0 30px #00fff0; }
-  100% { text-shadow: 0 0 10px #00fff0; }
+/* stats */
+.panel {
+  display: flex;
+  gap: 20px;
+  justify-content: center;
+  margin-top: 15px;
 }
 
-#goalText {
-  color: #888;
+.box {
+  padding: 10px 20px;
+  border: 1px solid #00fff0;
+  box-shadow: 0 0 10px #00fff0;
+  border-radius: 10px;
+  min-width: 120px;
+  background: rgba(0,0,0,0.4);
+}
+
+.box h3 {
+  margin: 0;
   font-size: 14px;
-  letter-spacing: 2px;
+  color: #aaa;
 }
 
+.box p {
+  margin: 5px 0 0;
+  font-size: 20px;
+  color: #00fff0;
+}
+
+/* goal */
 .bar {
   width: 420px;
   height: 8px;
@@ -61,43 +95,59 @@ h1 {
 #fill {
   height: 100%;
   width: 0%;
-  background: #00fff0;
+  background: linear-gradient(90deg,#00fff0,#0088ff);
   transition: width 1s ease;
-  box-shadow: 0 0 15px #00fff0;
 }
 </style>
 </head>
 
 <body>
 
+<img id="logo" src="logo.png">
+
+<canvas id="particles"></canvas>
+
 <div class="container">
-  <h1>LIVE SUBSCRIBERS</h1>
+
+  <h1>LIVE STATS</h1>
+
   <div id="subs">0</div>
 
-  <div id="goalText">Road to 10,000 Subs</div>
+  <div class="panel">
+    <div class="box">
+      <h3>SUBS</h3>
+      <p id="subsBox">0</p>
+    </div>
+
+    <div class="box">
+      <h3>VIEWS</h3>
+      <p id="viewsBox">0</p>
+    </div>
+
+    <div class="box">
+      <h3>GOAL</h3>
+      <p id="goalBox">10K</p>
+    </div>
+  </div>
 
   <div class="bar">
     <div id="fill"></div>
   </div>
+
 </div>
 
 <script>
-// 🔴 حط معلوماتك هنا فقط
 const API_KEY = "AIzaSyDV6wsuCP5iGrLUFkTOwCA-veseDC2uhNY";
 const CHANNEL_ID = "UCCji3rVchUafZT6qxETGIxQ";
 
 let goal = 10000;
 let lastSubs = 0;
 
-// 📊 goal system
+/* 📊 update goal */
 function updateGoal(subs){
+  if(subs >= goal) goal *= 2;
 
-  if(subs >= goal){
-    goal *= 2;
-  }
-
-  document.getElementById("goalText").innerText =
-    "Road to " + goal.toLocaleString() + " Subs";
+  document.getElementById("goalBox").innerText = goal.toLocaleString();
 
   let percent = (subs / goal) * 100;
   if(percent > 100) percent = 100;
@@ -105,47 +155,85 @@ function updateGoal(subs){
   document.getElementById("fill").style.width = percent + "%";
 }
 
-// 🔢 smooth animation
-function animateValue(start, end, duration){
-  let startTime = null;
+/* 🔢 animate */
+function animate(el, start, end, duration){
+  let t = null;
 
-  function step(t){
-    if(!startTime) startTime = t;
-    let progress = t - startTime;
+  function step(time){
+    if(!t) t = time;
+    let progress = time - t;
 
     let value = Math.floor(start + (end - start) * (progress / duration));
 
-    document.getElementById("subs").innerText = value;
+    el.innerText = value;
 
-    if(progress < duration){
-      requestAnimationFrame(step);
-    }
+    if(progress < duration) requestAnimationFrame(step);
   }
 
   requestAnimationFrame(step);
 }
 
-// 🔥 fetch subs
-async function loadSubs(){
-  try {
-    const url = `https://www.googleapis.com/youtube/v3/channels?part=statistics&id=${CHANNEL_ID}&key=${API_KEY}`;
-    const res = await fetch(url);
-    const data = await res.json();
+/* 🌌 particles */
+const canvas = document.getElementById("particles");
+const ctx = canvas.getContext("2d");
 
-    let subs = parseInt(data.items[0].statistics.subscriberCount);
+canvas.width = window.innerWidth;
+canvas.height = window.innerHeight;
 
-    animateValue(lastSubs, subs, 1200);
-    updateGoal(subs);
+let dots = [];
 
-    lastSubs = subs;
-
-  } catch (e) {
-    document.getElementById("subs").innerText = "Error";
-  }
+for(let i=0;i<70;i++){
+  dots.push({
+    x: Math.random()*canvas.width,
+    y: Math.random()*canvas.height,
+    r: Math.random()*2,
+    dx: (Math.random()-0.5)*0.5,
+    dy: (Math.random()-0.5)*0.5
+  });
 }
 
-loadSubs();
-setInterval(loadSubs, 5000);
+function draw(){
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+
+  dots.forEach(p=>{
+    p.x += p.dx;
+    p.y += p.dy;
+
+    if(p.x<0||p.x>canvas.width) p.dx*=-1;
+    if(p.y<0||p.y>canvas.height) p.dy*=-1;
+
+    ctx.beginPath();
+    ctx.arc(p.x,p.y,p.r,0,Math.PI*2);
+    ctx.fillStyle="#00fff0";
+    ctx.fill();
+  });
+
+  requestAnimationFrame(draw);
+}
+
+draw();
+
+/* 🔥 YouTube API */
+async function load(){
+  const url = `https://www.googleapis.com/youtube/v3/channels?part=statistics&id=${CHANNEL_ID}&key=${API_KEY}`;
+  const res = await fetch(url);
+  const data = await res.json();
+
+  let subs = parseInt(data.items[0].statistics.subscriberCount);
+  let views = parseInt(data.items[0].statistics.viewCount);
+
+  animate(document.getElementById("subs"), lastSubs, subs, 1000);
+
+  document.getElementById("subsBox").innerText = subs.toLocaleString();
+  document.getElementById("viewsBox").innerText = views.toLocaleString();
+
+  updateGoal(subs);
+
+  lastSubs = subs;
+}
+
+load();
+setInterval(load, 15000);
 </script>
 
 </body>
